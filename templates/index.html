@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biathlon Betting - Place Your Bet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .color-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .color-btn {
+            flex: 1;
+            padding: 20px;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .color-btn.selected {
+            border-color: #333;
+            transform: scale(1.05);
+        }
+
+        .btn-green {
+            background: #28a745;
+        }
+
+        .btn-red {
+            background: #dc3545;
+        }
+
+        .btn-blue {
+            background: #007bff;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .live-bets {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .live-bets h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .bet-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Biathlon Betting</h1>
+        <p class="subtitle">Place your bet on the winning zone!</p>
+
+        <div class="status-card" id="gameStatus">
+            <h3>⏳ Checking for active games...</h3>
+        </div>
+
+        <form id="betForm" style="display: none;">
+            <div class="form-group">
+                <label for="username">Your Username</label>
+                <input type="text" id="username" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Bet Amount ($)</label>
+                <input type="number" id="amount" placeholder="10.00" min="1" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label>Choose Your Zone</label>
+                <div class="color-buttons">
+                    <button type="button" class="color-btn btn-green" data-color="GREEN">
+                        🟢 GREEN
+                    </button>
+                    <button type="button" class="color-btn btn-red" data-color="RED">
+                        🔴 RED
+                    </button>
+                    <button type="button" class="color-btn btn-blue" data-color="BLUE">
+                        🔵 BLUE
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Place Bet</button>
+        </form>
+
+        <div class="message" id="message"></div>
+
+        <div class="live-bets" id="liveBets" style="display: none;">
+            <h3>📊 Live Bets</h3>
+            <div id="betsContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let selectedColor = null;
+        let currentGameId = null;
+
+        // Color selection
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedColor = this.dataset.color;
+            });
+        });
+
+        // Check for active game
+        async function checkActiveGame() {
+            try {
+                const response = await fetch('/api/game/current');
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentGameId = data.game.id;
+                    document.getElementById('gameStatus').innerHTML = `
+                        <h3>✅ Game Active - ID: ${data.game.id}</h3>
+                        <div class="status-info">
+                            <span>Payout: ${data.game.payout}x</span>
+                            <span>Total Bets: ${data.game.total_bets}</span>
+                        </div>
+                    `;
+                    document.getElementById('betForm').style.display = 'block';
+                    loadBets(currentGameId);
+                } else {
+                    document.getElementById('gameStatus').innerHTML = `
+                        <h3>🚫 No Active Game</h3>
+                        <p style="margin-top: 10px; color: #666;">Waiting for host to start a game...</p>
+                    `;
+                    document.getElementById('betForm').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking game:', error);
+                document.getElementById('gameStatus').innerHTML = `
+                    <h3>❌ Connection Error</h3>
+                    <p style="margin-top: 10px; color: #666;">Unable to connect to server</p>
+                `;
+            }
+        }
+
+        // Load bets for current game
+        async function loadBets(gameId) {
+            try {
+                const response = await fetch(`/api/game/bets/${gameId}`);
+                const data = await response.json();
+                
+                if (data.success && data.bets.length > 0) {
+                    document.getElementById('liveBets').style.display = 'block';
+                    const container = document.getElementById('betsContainer');
+                    container.innerHTML = data.bets.map(bet => `
+                        <div class="bet-item">
+                            <span><strong>${bet.user}</strong> bet on ${bet.choice}</span>
+                            <span>$${bet.amount}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading bets:', error);
+            }
+        }
+
+        // Submit bet
+        document.getElementById('betForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const amount = document.getElementById('amount').value;
+            
+            if (!selectedColor) {
+                showMessage('Please select a color!', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Placing Bet...';
+
+            try {
+                const response = await fetch('/api/bet/place', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        amount: parseFloat(amount),
+                        choice: selectedColor
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    document.getElementById('betForm').reset();
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+                    selectedColor = null;
+                    loadBets(currentGameId);
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Error placing bet. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Place Bet';
+            }
+        });
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // WebSocket listeners
+        socket.on('bet_placed', function(data) {
+            if (data.game_id === currentGameId) {
+                loadBets(currentGameId);
+                checkActiveGame(); // Update total bets count
+            }
+        });
+
+        socket.on('game_started', function() {
+            checkActiveGame();
+        });
+
+        socket.on('game_closed', function() {
+            checkActiveGame();
+        });
+
+        // Initial check and periodic refresh
+        checkActiveGame();
+        setInterval(checkActiveGame, 5000); // Check every 5 seconds
+    </script>
+</body>
+</html>
