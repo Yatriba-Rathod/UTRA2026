@@ -172,9 +172,10 @@
             color: white;
         }
 
-        .color-green { background: #28a745; }
-        .color-red { background: #dc3545; }
         .color-blue { background: #007bff; }
+        .color-red { background: #dc3545; }
+        .color-green { background: #28a745; }
+        .color-black { background: #333; }
 
         .stats {
             display: grid;
@@ -244,16 +245,20 @@
                     <div class="stat-label">Total Pool</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="greenBets">0</div>
-                    <div class="stat-label">🟢 Green Bets</div>
+                    <div class="stat-value" id="blueBets">0</div>
+                    <div class="stat-label">🔵 Blue Bets</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="redBets">0</div>
                     <div class="stat-label">🔴 Red Bets</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="blueBets">0</div>
-                    <div class="stat-label">🔵 Blue Bets</div>
+                    <div class="stat-value" id="greenBets">0</div>
+                    <div class="stat-label">🟢 Green Bets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="blackBets">0</div>
+                    <div class="stat-label">⚫ Black Bets</div>
                 </div>
             </div>
         </div>
@@ -560,17 +565,19 @@
             const stats = {
                 total: bets.length,
                 pool: bets.reduce((sum, bet) => sum + bet.amount, 0),
-                green: bets.filter(b => b.choice === 'GREEN').length,
+                blue: bets.filter(b => b.choice === 'BLUE').length,
                 red: bets.filter(b => b.choice === 'RED').length,
-                blue: bets.filter(b => b.choice === 'BLUE').length
+                green: bets.filter(b => b.choice === 'GREEN').length,
+                black: bets.filter(b => b.choice === 'BLACK').length
             };
 
             document.getElementById('statsContainer').style.display = 'grid';
             document.getElementById('totalBets').textContent = stats.total;
             document.getElementById('totalPool').textContent = `$${stats.pool.toFixed(2)}`;
-            document.getElementById('greenBets').textContent = stats.green;
-            document.getElementById('redBets').textContent = stats.red;
             document.getElementById('blueBets').textContent = stats.blue;
+            document.getElementById('redBets').textContent = stats.red;
+            document.getElementById('greenBets').textContent = stats.green;
+            document.getElementById('blackBets').textContent = stats.black;
         }
 
         function showMessage(text, type) {

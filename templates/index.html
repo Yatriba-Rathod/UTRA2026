@@ -133,6 +133,10 @@
             background: #007bff;
         }
 
+        .btn-black {
+            background: #333;
+        }
+
         .submit-btn {
             width: 100%;
             padding: 15px;
@@ -195,8 +199,99 @@
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            display: none;
+        }
+
+        .results-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .winning-color {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .winning-color.blue { background: #007bff; }
+        .winning-color.red { background: #dc3545; }
+        .winning-color.green { background: #28a745; }
+        .winning-color.black { background: #333; }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .result-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .result-stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .result-stat-label {
+            color: #666;
             font-size: 0.9em;
         }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        .results-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .color-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .color-tag.color-blue { background: #007bff; }
+        .color-tag.color-red { background: #dc3545; }
+        .color-tag.color-green { background: #28a745; }
+        .color-tag.color-black { background: #333; }
 
         .loading {
             text-align: center;
@@ -228,14 +323,17 @@
             <div class="form-group">
                 <label>Choose Your Zone</label>
                 <div class="color-buttons">
-                    <button type="button" class="color-btn btn-green" data-color="GREEN">
-                        🟢 GREEN
+                    <button type="button" class="color-btn btn-blue" data-color="BLUE">
+                        🔵 BLUE
                     </button>
                     <button type="button" class="color-btn btn-red" data-color="RED">
                         🔴 RED
                     </button>
-                    <button type="button" class="color-btn btn-blue" data-color="BLUE">
-                        🔵 BLUE
+                    <button type="button" class="color-btn btn-green" data-color="GREEN">
+                        🟢 GREEN
+                    </button>
+                    <button type="button" class="color-btn btn-black" data-color="BLACK">
+                        ⚫ BLACK
                     </button>
                 </div>
             </div>
@@ -244,6 +342,11 @@
         </form>
 
         <div class="message" id="message"></div>
+
+        <div class="results-panel" id="resultsPanel">
+            <h3>🏆 Game Results</h3>
+            <div id="resultsContainer"></div>
+        </div>
 
         <div class="live-bets" id="liveBets" style="display: none;">
             <h3>📊 Live Bets</h3>
@@ -394,9 +497,110 @@
             checkActiveGame();
         });
 
+        // Check for completed games
+        async function checkCompletedGames() {
+            try {
+                const response = await fetch('/api/game/recent-completed');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults(data.game, data.bets);
+                }
+            } catch (error) {
+                console.error('Error checking completed games:', error);
+            }
+        }
+
+        function showResults(game, bets) {
+            const resultsPanel = document.getElementById('resultsPanel');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            const winners = bets.filter(b => b.status === 'WON');
+            const losers = bets.filter(b => b.status === 'LOST');
+            const totalPayouts = winners.reduce((sum, bet) => sum + (bet.winnings || 0), 0);
+            
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="color: #666; font-size: 0.9em;">Winning Color</div>
+                    <div class="winning-color ${game.winner.toLowerCase()}">${game.winner}</div>
+                </div>
+
+                <div class="results-stats">
+                    <div class="result-stat">
+                        <div class="result-stat-value">${winners.length}</div>
+                        <div class="result-stat-label">Winners</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-value">${losers.length}</div>
+                        <div class="result-stat-label">Losers</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-value">$${totalPayouts.toFixed(2)}</div>
+                        <div class="result-stat-label">Total Payouts</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-value">${game.payout}x</div>
+                        <div class="result-stat-label">Payout Multiplier</div>
+                    </div>
+                </div>
+
+                ${winners.length > 0 ? `
+                    <h4 style="color: #28a745; margin-top: 20px; margin-bottom: 10px;">✅ Winners</h4>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Choice</th>
+                                <th>Bet Amount</th>
+                                <th>Winnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${winners.map(bet => `
+                                <tr>
+                                    <td><strong>${bet.user}</strong></td>
+                                    <td><span class="color-tag color-${bet.choice.toLowerCase()}">${bet.choice}</span></td>
+                                    <td>$${bet.amount.toFixed(2)}</td>
+                                    <td style="color: #28a745; font-weight: bold;">$${(bet.winnings || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : ''}
+                
+                ${losers.length > 0 ? `
+                    <h4 style="color: #dc3545; margin-top: 20px; margin-bottom: 10px;">❌ Losers</h4>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Choice</th>
+                                <th>Lost Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${losers.map(bet => `
+                                <tr>
+                                    <td><strong>${bet.user}</strong></td>
+                                    <td><span class="color-tag color-${bet.choice.toLowerCase()}">${bet.choice}</span></td>
+                                    <td style="color: #dc3545;">$${bet.amount.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : ''}
+            `;
+            
+            resultsPanel.style.display = 'block';
+        }
+
         // Initial check and periodic refresh
         checkActiveGame();
-        setInterval(checkActiveGame, 5000); // Check every 5 seconds
+        checkCompletedGames();
+        setInterval(() => {
+            checkActiveGame();
+            checkCompletedGames();
+        }, 5000); // Check every 5 seconds
     </script>
 </body>
 </html>

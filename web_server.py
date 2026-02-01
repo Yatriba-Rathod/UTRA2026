@@ -76,7 +76,7 @@ def place_bet():
         return jsonify({"success": False, "message": "No active game"})
     
     # Validate choice
-    if choice not in ["GREEN", "RED", "BLUE"]:
+    if choice not in ["GREEN", "RED", "BLUE", "BLACK"]:
         return jsonify({"success": False, "message": "Invalid choice"})
     
     try:
@@ -240,7 +240,33 @@ def handle_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
-    print("🌐 Starting Biathlon Betting Web Server...")
-    print("👤 User Interface: http://localhost:5000")
-    print("🎮 Host Interface: http://localhost:5000/host")
+    import socket
+    
+    # Get local IP address
+    def get_local_ip():
+        try:
+            # Create a socket to get the local IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except:
+            return "Unable to determine"
+    
+    local_ip = get_local_ip()
+    
+    print("=" * 60)
+    print("🌐 Biathlon Betting Web Server Started!")
+    print("=" * 60)
+    print("\n📱 ACCESS FROM THIS DEVICE:")
+    print("   👤 User Interface: http://localhost:5000")
+    print("   🎮 Host Interface: http://localhost:5000/host")
+    print("\n📱 ACCESS FROM OTHER DEVICES (phones, tablets, computers):")
+    print(f"   👤 User Interface: http://{local_ip}:5000")
+    print(f"   🎮 Host Interface: http://{local_ip}:5000/host")
+    print("\n💡 Share the above URLs with players on your network!")
+    print("=" * 60)
+    print()
+    
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
